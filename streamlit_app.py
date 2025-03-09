@@ -43,7 +43,7 @@ dark_css = """
 """
 st.markdown(dark_css, unsafe_allow_html=True)
 
-st.title("DataForSEO Process")
+st.title("Okza")
 
 # Champ de recherche toujours en haut
 keyword = st.text_input("Entrez un mot-clé pour lancer une nouvelle recherche :", "")
