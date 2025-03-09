@@ -11,26 +11,40 @@ import csv
 
 # Charger les variables d'environnement depuis le fichier .env
 load_dotenv()
-username = os.getenv("DATAFORSEO_USERNAME")
-password = os.getenv("DATAFORSEO_PASSWORD")
+# Identifiants pour l'API DataForSEO
+dataforseo_username = os.getenv("DATAFORSEO_USERNAME")
+dataforseo_password = os.getenv("DATAFORSEO_PASSWORD")
+# Identifiants pour l'accès à l'app Streamlit
+app_username = os.getenv("APP_USERNAME")
+app_password = os.getenv("APP_PASSWORD")
 
-if not username or not password:
-    st.error("Identifiants DataForSEO manquants dans le fichier .env")
+# Vérification de la présence des identifiants d'accès à l'app
+if not app_username or not app_password:
+    st.error("Les identifiants d'accès à l'application ne sont pas définis dans le fichier .env.")
     st.stop()
 
-# Préparation de l'en-tête d'authentification
-credentials = f"{username}:{password}"
-encoded_credentials = base64.b64encode(credentials.encode("utf-8")).decode("utf-8")
-headers = {
-    "Authorization": f"Basic {encoded_credentials}",
-    "Content-Type": "application/json"
-}
+# Gestion de la session pour la connexion
+if "logged_in" not in st.session_state:
+    st.session_state.logged_in = False
 
-# Nom du fichier d'historique
-history_file = "previous_results.csv"
+def login_form():
+    st.sidebar.title("Connexion à l'application")
+    username_input = st.sidebar.text_input("Nom d'utilisateur")
+    password_input = st.sidebar.text_input("Mot de passe", type="password")
+    if st.sidebar.button("Se connecter"):
+        if username_input == app_username and password_input == app_password:
+            st.session_state.logged_in = True
+            st.sidebar.success("Connexion réussie !")
+        else:
+            st.sidebar.error("Nom d'utilisateur ou mot de passe incorrect.")
+
+if not st.session_state.logged_in:
+    login_form()
+    st.warning("Veuillez vous connecter pour accéder à l'application.")
+    st.stop()
 
 # Configuration de la page Streamlit (mode sombre via CSS)
-st.set_page_config(page_title="Okza", layout="wide")
+st.set_page_config(page_title="DataForSEO App", layout="wide")
 dark_css = """
 <style>
   body { background-color: #121212; color: #EEE; }
@@ -43,7 +57,10 @@ dark_css = """
 """
 st.markdown(dark_css, unsafe_allow_html=True)
 
-st.title("Okza")
+st.title("DataForSEO Process")
+
+# Nom du fichier d'historique
+history_file = "previous_results.csv"
 
 # Champ de recherche toujours en haut
 keyword = st.text_input("Entrez un mot-clé pour lancer une nouvelle recherche :", "")
@@ -55,6 +72,13 @@ if st.button("Lancer le processus"):
         st.stop()
     else:
         st.info("Envoi de la tâche...")
+        # Préparation de l'authentification pour DataForSEO
+        credentials = f"{dataforseo_username}:{dataforseo_password}"
+        encoded_credentials = base64.b64encode(credentials.encode("utf-8")).decode("utf-8")
+        headers = {
+            "Authorization": f"Basic {encoded_credentials}",
+            "Content-Type": "application/json"
+        }
         # Préparer les données de la tâche
         post_url = "https://api.dataforseo.com/v3/merchant/google/products/task_post"
         post_data = [{
@@ -86,7 +110,6 @@ if st.button("Lancer le processus"):
         while attempt < max_attempts:
             data_resp = requests.get(advanced_url, headers=headers).json()
             try:
-                # Tentative d'extraction de items_count dans la structure imbriquée
                 items_count = data_resp["tasks"][0]["result"][0].get("items_count", 0)
             except (KeyError, IndexError, TypeError):
                 items_count = 0
@@ -160,7 +183,14 @@ if st.button("Lancer le processus"):
 
 st.markdown("<hr>", unsafe_allow_html=True)
 
-# Affichage par défaut de l'historique complet des recherches (du plus récent au plus ancien)
+# Bouton pour supprimer l'historique de recherche
+if st.button("Supprimer l'historique des recherches"):
+    if os.path.exists(history_file):
+        os.remove(history_file)
+        st.success("Historique supprimé.")
+    else:
+        st.info("Aucun historique à supprimer.")
+
 st.header("Historique des recherches")
 if os.path.exists(history_file) and os.path.getsize(history_file) > 0:
     history_df = pd.read_csv(history_file)
