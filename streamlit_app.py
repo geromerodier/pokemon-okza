@@ -44,7 +44,7 @@ if not st.session_state.logged_in:
     st.stop()
 
 # Configuration de la page Streamlit (mode sombre via CSS)
-st.set_page_config(page_title="Okza App", layout="wide")
+st.set_page_config(page_title="DataForSEO App", layout="wide")
 dark_css = """
 <style>
   body { background-color: #121212; color: #EEE; }
@@ -57,7 +57,7 @@ dark_css = """
 """
 st.markdown(dark_css, unsafe_allow_html=True)
 
-st.title("Search with Okza")
+st.title("DataForSEO Process")
 
 # Nom du fichier d'historique
 history_file = "previous_results.csv"
@@ -194,10 +194,14 @@ if st.button("Supprimer l'historique des recherches"):
 st.header("Historique des recherches")
 if os.path.exists(history_file) and os.path.getsize(history_file) > 0:
     history_df = pd.read_csv(history_file)
-    # Vérifier que la colonne "timestamp" existe et trier par ordre décroissant (du plus récent au plus ancien)
+    # Si la colonne "timestamp" existe, trier par ordre décroissant (du plus récent au plus ancien)
     if "timestamp" in history_df.columns:
         history_df["timestamp"] = pd.to_datetime(history_df["timestamp"], errors="coerce")
         history_df = history_df.sort_values("timestamp", ascending=False)
+    # Ajout d'une colonne "Lien" qui permet d'ouvrir les résultats associés dans un nouvel onglet
+    # Ici, nous construisons un lien basé sur le mot-clé (à adapter selon votre URL de résultats)
+    history_df["Lien"] = history_df["recherche"].apply(lambda k: f'<a href="?keyword={k}" target="_blank">Voir résultats</a>')
+    
     st.markdown(history_df.to_html(escape=False, index=False), unsafe_allow_html=True)
 else:
     st.info("Aucune recherche précédente n'est disponible.")
