@@ -85,7 +85,7 @@ if st.button("Lancer le processus"):
         advanced_url = f"https://api.dataforseo.com/v3/merchant/google/products/task_get/advanced/{task_id}"
         progress_bar = st.progress(0)
         status_text = st.empty()
-        max_attempts = 5
+        max_attempts = 20
         attempt = 0
         items_count = 0
         
