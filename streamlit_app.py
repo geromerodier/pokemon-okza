@@ -15,8 +15,36 @@ load_dotenv()
 username = os.getenv("DATAFORSEO_USERNAME")
 password = os.getenv("DATAFORSEO_PASSWORD")
 
+# Identifiants pour l'accès à l'app Streamlit
+app_username = os.getenv("APP_USERNAME")
+app_password = os.getenv("APP_PASSWORD")
+
 if not username or not password:
     st.error("Identifiants DataForSEO manquants dans le fichier .env")
+    st.stop()
+
+if not app_username or not app_password:
+    st.error("Identifiants d'accès à l'application manquants dans le fichier .env")
+    st.stop()
+
+# Gestion de la session pour la connexion
+if "logged_in" not in st.session_state:
+    st.session_state.logged_in = False
+
+def login_form():
+    st.sidebar.title("Connexion à l'application")
+    username_input = st.sidebar.text_input("Nom d'utilisateur")
+    password_input = st.sidebar.text_input("Mot de passe", type="password")
+    if st.sidebar.button("Se connecter"):
+        if username_input == app_username and password_input == app_password:
+            st.session_state.logged_in = True
+            st.sidebar.success("Connexion réussie !")
+        else:
+            st.sidebar.error("Nom d'utilisateur ou mot de passe incorrect.")
+
+if not st.session_state.logged_in:
+    login_form()
+    st.warning("Veuillez vous connecter pour accéder à l'application.")
     st.stop()
 
 # Préparation de l'en-tête d'authentification pour DataForSEO
