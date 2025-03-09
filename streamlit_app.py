@@ -30,7 +30,7 @@ headers = {
 history_file = "previous_results.csv"
 
 # Configuration de la page Streamlit (mode sombre via CSS)
-st.set_page_config(page_title="DataForSEO App", layout="wide")
+st.set_page_config(page_title="Okza", layout="wide")
 dark_css = """
 <style>
   body { background-color: #121212; color: #EEE; }
@@ -109,7 +109,6 @@ if st.button("Lancer le processus"):
         # Récupération des données finales
         final_response = requests.get(advanced_url, headers=headers)
         data_resp = final_response.json()
-        # Vérification de la présence de la clé "tasks" et des sous-éléments
         if (
             "tasks" in data_resp and 
             isinstance(data_resp["tasks"], list) and len(data_resp["tasks"]) > 0 and
@@ -161,15 +160,14 @@ if st.button("Lancer le processus"):
 
 st.markdown("<hr>", unsafe_allow_html=True)
 
-# Affichage par défaut de l'historique complet des recherches
+# Affichage par défaut de l'historique complet des recherches (du plus récent au plus ancien)
 st.header("Historique des recherches")
 if os.path.exists(history_file) and os.path.getsize(history_file) > 0:
     history_df = pd.read_csv(history_file)
-    # Trier l'historique par date décroissante
+    # Vérifier que la colonne "timestamp" existe et trier par ordre décroissant (du plus récent au plus ancien)
     if "timestamp" in history_df.columns:
         history_df["timestamp"] = pd.to_datetime(history_df["timestamp"], errors="coerce")
         history_df = history_df.sort_values("timestamp", ascending=False)
-    # Afficher l'historique complet
     st.markdown(history_df.to_html(escape=False, index=False), unsafe_allow_html=True)
 else:
     st.info("Aucune recherche précédente n'est disponible.")
