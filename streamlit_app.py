@@ -11,6 +11,7 @@ import csv
 
 # Charger les variables d'environnement depuis le fichier .env
 load_dotenv()
+
 # Identifiants pour l'API DataForSEO
 dataforseo_username = os.getenv("DATAFORSEO_USERNAME")
 dataforseo_password = os.getenv("DATAFORSEO_PASSWORD")
@@ -174,7 +175,8 @@ if st.button("Lancer le processus"):
             now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             new_history = pd.DataFrame({
                 "recherche": [keyword],
-                "timestamp": [now]
+                "timestamp": [now],
+                "results_link": [f'<a href="/?keyword={keyword}" target="_blank">Voir résultats</a>']
             })
             if os.path.exists(history_file) and os.path.getsize(history_file) > 0:
                 new_history.to_csv(history_file, mode="a", header=False, index=False)
@@ -194,14 +196,10 @@ if st.button("Supprimer l'historique des recherches"):
 st.header("Historique des recherches")
 if os.path.exists(history_file) and os.path.getsize(history_file) > 0:
     history_df = pd.read_csv(history_file)
-    # Si la colonne "timestamp" existe, trier par ordre décroissant (du plus récent au plus ancien)
+    # Convertir la colonne timestamp en datetime et trier par ordre décroissant
     if "timestamp" in history_df.columns:
         history_df["timestamp"] = pd.to_datetime(history_df["timestamp"], errors="coerce")
         history_df = history_df.sort_values("timestamp", ascending=False)
-    # Ajout d'une colonne "Lien" qui permet d'ouvrir les résultats associés dans un nouvel onglet
-    # Ici, nous construisons un lien basé sur le mot-clé (à adapter selon votre URL de résultats)
-    history_df["Lien"] = history_df["recherche"].apply(lambda k: f'<a href="?keyword={k}" target="_blank">Voir résultats</a>')
-    
     st.markdown(history_df.to_html(escape=False, index=False), unsafe_allow_html=True)
 else:
     st.info("Aucune recherche précédente n'est disponible.")
