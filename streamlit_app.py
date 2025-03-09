@@ -44,7 +44,7 @@ if not st.session_state.logged_in:
     st.stop()
 
 # Configuration de la page Streamlit (mode sombre via CSS)
-st.set_page_config(page_title="DataForSEO App", layout="wide")
+st.set_page_config(page_title="Okza App", layout="wide")
 dark_css = """
 <style>
   body { background-color: #121212; color: #EEE; }
@@ -57,7 +57,7 @@ dark_css = """
 """
 st.markdown(dark_css, unsafe_allow_html=True)
 
-st.title("DataForSEO Process")
+st.title("Search with Okza")
 
 # Nom du fichier d'historique
 history_file = "previous_results.csv"
