@@ -7,7 +7,6 @@ import streamlit as st
 import pandas as pd
 import datetime
 from dotenv import load_dotenv
-import csv
 
 # Charger les variables d'environnement depuis le fichier .env
 load_dotenv()
@@ -16,36 +15,8 @@ load_dotenv()
 username = os.getenv("DATAFORSEO_USERNAME")
 password = os.getenv("DATAFORSEO_PASSWORD")
 
-# Identifiants pour l'accès à l'app Streamlit
-app_username = os.getenv("APP_USERNAME")
-app_password = os.getenv("APP_PASSWORD")
-
 if not username or not password:
     st.error("Identifiants DataForSEO manquants dans le fichier .env")
-    st.stop()
-
-if not app_username or not app_password:
-    st.error("Identifiants d'accès à l'application manquants dans le fichier .env")
-    st.stop()
-
-# Gestion de la session pour la connexion
-if "logged_in" not in st.session_state:
-    st.session_state.logged_in = False
-
-def login_form():
-    st.sidebar.title("Connexion à l'application")
-    username_input = st.sidebar.text_input("Nom d'utilisateur")
-    password_input = st.sidebar.text_input("Mot de passe", type="password")
-    if st.sidebar.button("Se connecter"):
-        if username_input == app_username and password_input == app_password:
-            st.session_state.logged_in = True
-            st.sidebar.success("Connexion réussie !")
-        else:
-            st.sidebar.error("Nom d'utilisateur ou mot de passe incorrect.")
-
-if not st.session_state.logged_in:
-    login_form()
-    st.warning("Veuillez vous connecter pour accéder à l'application.")
     st.stop()
 
 # Préparation de l'en-tête d'authentification pour DataForSEO
@@ -55,9 +26,6 @@ headers = {
     "Authorization": f"Basic {encoded_credentials}",
     "Content-Type": "application/json"
 }
-
-# Nom du fichier d'historique (seulement keyword et timestamp)
-history_file = "previous_results.csv"
 
 # Configuration de la page Streamlit (mode sombre via CSS)
 st.set_page_config(page_title="Okza", layout="wide")
@@ -98,9 +66,6 @@ if st.button("Lancer le processus"):
         if result.get("tasks") and len(result["tasks"]) > 0:
             task_id = result["tasks"][0]["id"]
             st.success(f"La tâche a été créée avec l'ID : {task_id}")
-            # Sauvegarde de l'ID dans un fichier pour usage ultérieur
-            with open("task_id.txt", "w", encoding="utf-8") as f:
-                f.write(task_id)
         else:
             st.error("Erreur lors de la création de la tâche.")
             st.stop()
@@ -177,28 +142,3 @@ if st.button("Lancer le processus"):
                 file_name="results_table.csv",
                 mime="text/csv"
             )
-            
-            # Sauvegarde de la recherche dans l'historique (mot-clé et timestamp uniquement)
-            now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            new_history = pd.DataFrame({
-                "recherche": [keyword],
-                "timestamp": [now]
-            })
-            if os.path.exists(history_file) and os.path.getsize(history_file) > 0:
-                new_history.to_csv(history_file, mode="a", header=False, index=False)
-            else:
-                new_history.to_csv(history_file, mode="w", header=True, index=False)
-
-st.markdown("<hr>", unsafe_allow_html=True)
-
-# Affichage par défaut de l'historique complet des recherches
-st.header("Historique des recherches")
-if os.path.exists(history_file) and os.path.getsize(history_file) > 0:
-    history_df = pd.read_csv(history_file)
-    # Trier l'historique par date décroissante
-    if "timestamp" in history_df.columns:
-        history_df["timestamp"] = pd.to_datetime(history_df["timestamp"], errors="coerce")
-        history_df = history_df.sort_values("timestamp", ascending=False)
-    st.markdown(history_df.to_html(escape=False, index=False), unsafe_allow_html=True)
-else:
-    st.info("Aucune recherche précédente n'est disponible.")
